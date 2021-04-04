@@ -1,5 +1,5 @@
 {
   "ConnectionStrings": {
     "DatabaseMdf": "Server=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\Leo\\source\\repos\\TeuCarRepairMgtSys\\TeuCarRepairMgtSys\\Data\\CarRepairDB.mdf;Trusted_Connection=Yes;"
-  },
+  }
 }
