@@ -12,7 +12,7 @@
         {
         }
 
-        public Inventory(int id, int vID, int stock, double price,double cost)
+        public Inventory(int id, int vID, int stock, double price, double cost)
         {
             Id = id;
             VID = vID;

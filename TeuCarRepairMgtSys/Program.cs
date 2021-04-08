@@ -9,18 +9,15 @@ namespace TeuCarRepairMgtSys
 
     class Program
     {
-        private static int vIDcount = 1;
-        private static int iIDcount = 1;
-        private static int rIDcount = 1;
-
 
         private static string cs = GetConnectionString("DatabaseMdf");
         private static string temp = "";
         private static string errorMsg = "";
-        private static int searchID = -1;
-
+        private static int vID = -1;
+        private static int iID = -1;
+        private static int rID = -1;
         private static List<string> list = new List<string>();
-
+        private static int searchID = -1;
         static void Main(string[] args)
         {
             MenuMain();
@@ -100,8 +97,8 @@ namespace TeuCarRepairMgtSys
                         AskVehicleInfo(isUpdate: false);
                         break;
                     case 3:
-                        searchID = AskID("vehicle");
-                        PrintAll('v', searchID: searchID, pause: false);
+                        vID = AskID("vehicle");
+                        PrintAll('v', searchID: vID, pause: false);
 
                         do
                         {
@@ -111,7 +108,7 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            AskVehicleInfo(isUpdate: true, whichID: searchID);
+                            AskVehicleInfo(isUpdate: true, vIDToUpdate: searchID);
                         }
                         break;
                     case 4:
@@ -296,44 +293,56 @@ namespace TeuCarRepairMgtSys
         /**
          * asks for the vehicle infos then insert or update accordingly 
          */
-        public static void AskVehicleInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
+        public static void AskVehicleInfo(string eMsg = "", bool isUpdate = false, int vIDToUpdate = -1)
         {
-            list.Clear(); //reset
+            Vehicle newV = new Vehicle();
+            newV.Id = isUpdate == false ? -1 : vIDToUpdate;
 
-            string[] arr = { "Make", "Model", "Year(1900 - 2021)", "Condition is new? (y/n)" };
-
-            for (int i = 0; i < 4; i++)
+            do
             {
-                do
+                Console.WriteLine($"Enter Make: ");
+                temp = Console.ReadLine().Trim().ToUpper();
+                Console.WriteLine(temp.Length <= 0 ? $"Error:Value can't be empty.\n" : null);
+            } while (temp.Length <= 0);
+
+            newV.Make = temp;
+
+            do
+            {
+                Console.WriteLine($"Model: ");
+                temp = Console.ReadLine().Trim().ToUpper();
+                Console.WriteLine(temp.Length <= 0 ? $"Error: Value can't be empty.\n" : null);
+            } while (temp.Length <= 0);
+
+            newV.Model = temp;
+
+            do
+            {
+                Console.WriteLine($"Year(1900 - 2021): ");
+                temp = Console.ReadLine().Trim().ToUpper();
+                if (temp.Length > 0 && IsValidInt(temp))
                 {
-                    Console.WriteLine($"{arr[i]}: ");
-                    temp = Console.ReadLine().Trim().ToUpper();
+                    int tempyr = int.Parse(temp);
+                    temp = tempyr >= 1900 && tempyr <= 2021 ? temp : "";
+                }
+                Console.WriteLine(temp.Length <= 0 ? $"Error: value must be between 19900 - 2021 only.\n" : null);
+            } while (temp.Length <= 0);
 
-                    if (i == 2 && temp.Length > 0 && IsValidInt(temp))
-                    {
-                        int tempyr = int.Parse(temp);
-                        temp = tempyr >= 1900 && tempyr <= 2021 ? temp : "";
-                    }
+            newV.Year = int.Parse(temp);
 
-                    else if (i == 3)
-                    {
-                        temp = temp.Equals("Y") ? "NEW" :
+            do
+            {
+                Console.WriteLine($"Condition is new? (y/n): ");
+                temp = Console.ReadLine().Trim().ToUpper();
+                temp = temp.Equals("Y") ? "NEW" :
                                 temp.Equals("N") ? "USED" : "";
-                    }
 
-                    if (temp.Length <= 0)
-                    {
-                        Console.WriteLine(i <= 1 ? $"Error: {arr[i]} can't be empty.\n" :
-                                         i == 2 ? $"Error: Enter a valid year between 1900-2021.\n" :
-                                                $"Error: Choose either y or n.\n");
-                    }
+                Console.WriteLine(temp.Length <= 0 ? $"Choose either y or n.\n" : null);
+            } while (temp.Length <= 0);
 
-                } while (temp.Length <= 0);
+            newV.Cond = temp;
 
-                list.Add(temp);
-            }
-
-            InsertVehicle(list[0], list[1], int.Parse(list[2]), list[3], isUpdate: isUpdate, whichID: whichID);
+            InsertUpdate(tbChar: 'v', vIN: newV, isUpdate: isUpdate);
         }
 
         /**
@@ -403,7 +412,7 @@ namespace TeuCarRepairMgtSys
 
             } while (cost < 0);
 
-            InsertInventory(vID: searchID, stock, price, cost, isUpdate: isUpdate, whichID: whichID);
+            //InsertInventory(vID: searchID, stock, price, cost, isUpdate: isUpdate, whichID: whichID);
         }
 
         /**
@@ -437,7 +446,7 @@ namespace TeuCarRepairMgtSys
             } while (temp.Length <= 0);
 
 
-            InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: isUpdate == false ? searchID : whichID);
+            //InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: isUpdate == false ? searchID : whichID);
 
         }
 
@@ -504,6 +513,7 @@ namespace TeuCarRepairMgtSys
         /**
          * insert/updates the repair record
          */
+        /*
         static void InsertRepair(string whatToRepair, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
@@ -521,36 +531,81 @@ namespace TeuCarRepairMgtSys
 
             MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
-
+        */
         /**
-         * insert/updates the vehicle record
+         * insert/updates the record in the db table
          */
-        static void InsertVehicle(string make, string model, int year, string cond, bool isUpdate = false, int whichID = -1)
+        static void InsertUpdate(char tbChar, Vehicle vIN = null, Inventory iIN = null, Repair rIN = null, bool isUpdate = false)
         {
-            string query = isUpdate == false ? "INSERT INTO Vehicle(vmake, vmodel, vyear, vcondition) VALUES (@make,@model,@year,@cond)" :
-                "UPDATE Vehicle SET vmake=@make, vmodel=@model, vyear=@year,vcondition=@cond WHERE vID=@whichVID";
+            string query = "";
+
+            if (tbChar == 'v')
+            {
+                query = isUpdate == false ? $"INSERT INTO vehicle (vmake, vmodel, vyear, vcondition) VALUES (@make, @model, @year, @cond)" :
+                                            $"UPDATE vehicle SET vmake=@make, vmodel=@model, vyear=@year,vcondition=@cond WHERE vID=@vID";
+            }
+            else if (tbChar == 'i')
+            {
+                query = isUpdate == false ? $"INSERT INTO Inventory(vID, stock, price, cost) VALUES (@vID,@stock,@price,@cost)" :
+                                           $"UPDATE Inventory SET stock=@stock, price=@price, cost=@cost WHERE vID=@vID";
+            }
+            else if (tbChar == 'r')
+            {
+                query = isUpdate == false ? $"INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
+                                           $"UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@rID ";
+            }
 
             using (SqlConnection conn = new SqlConnection(cs))
             {
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("make", make);
-                cmd.Parameters.AddWithValue("model", model);
-                cmd.Parameters.AddWithValue("year", year);
-                cmd.Parameters.AddWithValue("cond", cond);
-                if (isUpdate == true)
+
+                if (tbChar == 'v')
                 {
-                    cmd.Parameters.AddWithValue("whichVID", whichID);
+                    if (isUpdate == true)
+                    {
+                        cmd.Parameters.AddWithValue("vID", vIN.Id);
+                    }
+                    cmd.Parameters.AddWithValue("make", vIN.Make);
+                    cmd.Parameters.AddWithValue("model", vIN.Model);
+                    cmd.Parameters.AddWithValue("year", vIN.Year);
+                    cmd.Parameters.AddWithValue("cond", vIN.Cond);
                 }
+                else if (tbChar == 'i')
+                {
+                    cmd.Parameters.AddWithValue("vID", iIN.VID);
+                    cmd.Parameters.AddWithValue("stock", iIN.Stock);
+                    cmd.Parameters.AddWithValue("price", iIN.Price);
+                    cmd.Parameters.AddWithValue("cost", iIN.Cost);
+                }
+                else if (tbChar == 'r')
+                {
+                    cmd.Parameters.AddWithValue("rID", rIN.Id);
+                    cmd.Parameters.AddWithValue("whatToRepair", rIN.WhatToRepair);
+                }
+
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
 
-            MenuVehicle(eMsg: isUpdate == false ? "aSucc" : "uSucc");
-        }
 
+            if (tbChar == 'v')
+            {
+                MenuVehicle(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+            }
+            else if (tbChar == 'i')
+            {
+                MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+            }
+            else if (tbChar == 'r')
+            {
+                MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+            }
+        }
+        
         /**
          * insert/updates the inventory record
          */
+        /*
         static void InsertInventory(int vID, int stock, double price, double cost, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Inventory(vID, stock, price, cost) VALUES (@vID,@stock,@price,@cost)" :
@@ -577,10 +632,10 @@ namespace TeuCarRepairMgtSys
             }
             MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
-
+        */
         /**
          * asks for the tables id  and
-         * chhecks if it exist in thhe db and
+         * checks if it exist in thhe db and
          * returns id if it exist, otherwise its -1
          */
         public static int AskID(string tbname, string eMsg = "", bool inInv = false)
