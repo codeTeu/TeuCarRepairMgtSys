@@ -28,11 +28,11 @@ CONSTRAINT "FK_Inventory_Inventory" FOREIGN KEY ("iID") REFERENCES "dbo"."Invent
 );
 
 
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('Ford', 'Escape', 2000, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('Honda', 'Civic', 2021, 'new');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('Nissan', 'Armada', 1995, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('Honda', 'CR-V', 1993, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('Toyota', 'Camry', 2012, 'new');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('FORD', 'ESCAPE', 2000, 'used');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CIVIC', 2021, 'new');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('NISSAN', 'ARMAAD', 1995, 'used');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CR-V', 1993, 'used');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('TOYOTA', 'CAMMMRY', 2012, 'new');
 
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(1, 1, 1, 1);
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(2, 2, 2, 2);
@@ -40,10 +40,10 @@ INSERT INTO Inventory(vID,stock,price,cost) VALUES(3, 3, 3, 3);
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(4, 4, 4, 4);
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(5, 5, 5, 5);
 
-INSERT INTO Repair(iID, whatToRepair) VALUES(1, 'tire');
-INSERT INTO Repair(iID, whatToRepair) VALUES(2, 'side mirror');
-INSERT INTO Repair(iID, whatToRepair) VALUES(3, 'brakepad');
-INSERT INTO Repair(iID, whatToRepair) VALUES(4, 'steeringwheel');
-INSERT INTO Repair(iID, whatToRepair) VALUES(5, 'backlight');
+INSERT INTO Repair(iID, whatToRepair) VALUES(1, 'TIRE');
+INSERT INTO Repair(iID, whatToRepair) VALUES(2, 'SIDE MIRROR');
+INSERT INTO Repair(iID, whatToRepair) VALUES(3, 'DOOR HANDLE');
+INSERT INTO Repair(iID, whatToRepair) VALUES(4, 'ENGINE');
+INSERT INTO Repair(iID, whatToRepair) VALUES(5, 'BACKLIGHT');
 
 

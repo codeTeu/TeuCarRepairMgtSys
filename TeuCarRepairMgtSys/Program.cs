@@ -14,7 +14,6 @@ namespace TeuCarRepairMgtSys
         private static string errorMsg = "";
         private static int searchID = -1;
 
-
         private static List<string> list = new List<string>();
 
         static void Main(string[] args)
@@ -108,7 +107,6 @@ namespace TeuCarRepairMgtSys
                         if (temp.Equals("y"))
                         {
                             AskVehicleInfo(isUpdate: true, whichID: searchID);
-
                         }
                         break;
                     case 4:
@@ -170,7 +168,7 @@ namespace TeuCarRepairMgtSys
                         AskInvInfo(isUpdate: false);
                         break;
                     case 3:
-                        searchID = AskID("inventory");
+                        searchID = AskID("inventory", inInv: true);
                         PrintAll('i', searchID: searchID, pause: false);
 
                         do
@@ -185,7 +183,7 @@ namespace TeuCarRepairMgtSys
                         }
                         break;
                     case 4:
-                        searchID = AskID("inventory");
+                        searchID = AskID("inventory", inInv: true);
                         PrintAll('i', searchID: searchID, pause: false);
 
                         do
@@ -241,23 +239,39 @@ namespace TeuCarRepairMgtSys
                         PrintAll('r');
                         break;
                     case 2:
-                        PrintSubMenuHeader("ADD NEW REPAIR", eMsg: eMsg);
-                        AskRepInfo(action: 'a');
+                        PrintSubMenuHeader("ADD NEW REPAIR");
+                        AskRepInfo(isUpdate: false);
                         break;
                     case 3:
-                        //ask vehicle id
-                        //print inv record
+                        searchID = AskID("repair");
+                        PrintAll('r', searchID: searchID, pause: false);
 
-                        //ask vehicle model, make, year, condition
-                        //put each to var
-                        //update to db
+                        do
+                        {
+                            Console.WriteLine("\nUpdate this record? (y/n)");
+                            temp = Console.ReadLine().ToLower();
+                        } while (!temp.Equals("y") && !temp.Equals("n"));
+
+                        if (temp.Equals("y"))
+                        {
+                            AskRepInfo(isUpdate: true, whichID: searchID);
+                        }
                         break;
                     case 4:
-                        //ask inv id
-                        //print vehicle record
+                        searchID = AskID("repair", inInv: true);
+                        PrintAll('r', searchID: searchID, pause: false);
 
-                        //Ask if sure delete
-                        //delete from db
+                        do
+                        {
+                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
+                            Console.WriteLine("\nDelete this record? (y/n)");
+                            temp = Console.ReadLine().ToLower();
+                        } while (!temp.Equals("y") && !temp.Equals("n"));
+
+                        if (temp.Equals("y"))
+                        {
+                            Delete(dbTable: "repair", colname: "rID", searchID);
+                        }
                         break;
                     case 5:
                         MenuMain();
@@ -383,9 +397,9 @@ namespace TeuCarRepairMgtSys
             InsertInventory(vID: searchID, stock, price, cost, isUpdate: isUpdate, whichID: whichID);
         }
 
-        public static void AskRepInfo(char action, string eMsg = "")
+        public static void AskRepInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
         {
-            if (action == 'a')
+            if (isUpdate == false)
             {
                 do
                 {
@@ -401,10 +415,18 @@ namespace TeuCarRepairMgtSys
                 {
                     MenuRepair("noI");
                 }
-
             }
 
-            Console.WriteLine("Enter part to repair: ");
+            do
+            {
+                Console.WriteLine("Part to be repaired: ");
+                temp = Console.ReadLine().Trim().ToUpper();
+                Console.WriteLine(temp.Length <= 0 ? "Error: Value can't be empty.\n" : "");
+            } while (temp.Length <= 0);
+
+
+            InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: whichID);
+
 
         }
 
@@ -460,11 +482,27 @@ namespace TeuCarRepairMgtSys
             }
             else
             {
-                MenuInventory(eMsg: "dSucc");
+                MenuRepair(eMsg: "dSucc");
             }
 
         }
+        static void InsertRepair(string whatToRepair, bool isUpdate = false, int whichID = -1)
+        {
+            string query = isUpdate == false ? "INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
+                                             "UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@whichID";
 
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("whichID", whichID);
+                cmd.Parameters.AddWithValue("whatToRepair", whatToRepair);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+        }
 
         static void InsertVehicle(string make, string model, int year, string cond, bool isUpdate = false, int whichID = -1)
         {
@@ -492,7 +530,7 @@ namespace TeuCarRepairMgtSys
         static void InsertInventory(int vID, int stock, double price, double cost, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Inventory(vID, stock, price, cost) VALUES (@vID,@stock,@price,@cost)" :
-                                             "UPDATE Inventory SET stock=@stock, price=@price, cost=@cost WHERE iID=@whichIID";
+                                             "UPDATE Inventory SET stock=@stock, price=@price, cost=@cost WHERE vID=@whichID";
 
             using (SqlConnection conn = new SqlConnection(cs))
             {
@@ -503,7 +541,7 @@ namespace TeuCarRepairMgtSys
                 }
                 else
                 {
-                    cmd.Parameters.AddWithValue("whichIID", whichID);
+                    cmd.Parameters.AddWithValue("whichID", whichID);
                 }
 
                 cmd.Parameters.AddWithValue("stock", stock);
@@ -516,21 +554,23 @@ namespace TeuCarRepairMgtSys
             MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
 
-        public static int AskID(string tbname, string eMsg = "")
+        public static int AskID(string tbname, string eMsg = "", bool inInv = false)
         {
+            tbname = tbname.StartsWith('i') && inInv == true ? "vehicle" : tbname;
+
             PrintSubMenuHeader("Which record?", eMsg: eMsg);
             Console.WriteLine($"Enter {tbname} ID: ");
             temp = Console.ReadLine().Trim();
 
             if (IsValidInt(temp) == true)
             {
-                int searchV = int.Parse(temp);
+                searchID = int.Parse(temp);
 
-                if (tbname.StartsWith('v') && GetID(SELECT: "vID", FROM: tbname, WHERE: "vID", searchV) >= 0 ||
-                    tbname.StartsWith('i') && GetID(SELECT: "iID", FROM: tbname, WHERE: "iID", searchV) >= 0 ||
-                    tbname.StartsWith('r') && GetID(SELECT: "rID", FROM: tbname, WHERE: "rID", searchV) >= 0)
+                if (tbname.StartsWith('v') && GetID(SELECT: "vID", FROM: tbname, WHERE: "vID", searchID) >= 0 ||
+                    tbname.StartsWith('i') && GetID(SELECT: "iID", FROM: tbname, WHERE: "vID", searchID) >= 0 ||
+                    tbname.StartsWith('r') && GetID(SELECT: "rID", FROM: tbname, WHERE: "rID", searchID) >= 0)
                 {
-                    return searchV;
+                    return searchID;
                 }
                 else
                 {
@@ -732,7 +772,7 @@ namespace TeuCarRepairMgtSys
             else if (rec == 'i')
             {
                 query = searchID < 0 ? "SELECT iID, vID, stock, price, cost FROM Inventory" :
-                                         "SELECT iID, vID, stock, price, cost FROM Inventory WHERE iID=@searchID";
+                                         "SELECT iID, vID, stock, price, cost FROM Inventory WHERE vID=@searchID";
 
             }
             else if (rec == 'r')
