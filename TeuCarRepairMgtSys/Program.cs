@@ -9,6 +9,11 @@ namespace TeuCarRepairMgtSys
 
     class Program
     {
+        private static int vIDcount = 1;
+        private static int iIDcount = 1;
+        private static int rIDcount = 1;
+
+
         private static string cs = GetConnectionString("DatabaseMdf");
         private static string temp = "";
         private static string errorMsg = "";
