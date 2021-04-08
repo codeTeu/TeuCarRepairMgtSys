@@ -13,11 +13,7 @@ namespace TeuCarRepairMgtSys
         private static string cs = GetConnectionString("DatabaseMdf");
         private static string temp = "";
         private static string errorMsg = "";
-        private static int vID = -1;
-        private static int iID = -1;
-        private static int rID = -1;
-        private static List<string> list = new List<string>();
-        private static int searchID = -1;
+        private static int id = -1;
         static void Main(string[] args)
         {
             MenuMain();
@@ -39,7 +35,7 @@ namespace TeuCarRepairMgtSys
             Console.WriteLine("\nSelect a number: ");
             temp = Console.ReadLine().Trim();
 
-            if (IsValidInt(temp) == true)
+            if (IsValid(temp))
             {
                 switch (int.Parse(temp))
                 {
@@ -85,7 +81,7 @@ namespace TeuCarRepairMgtSys
             Console.WriteLine("\nSelect a number: ");
             temp = Console.ReadLine().Trim();
 
-            if (IsValidInt(temp) == true)
+            if (IsValid(temp))
             {
                 switch (int.Parse(temp))
                 {
@@ -97,8 +93,8 @@ namespace TeuCarRepairMgtSys
                         AskVehicleInfo(isUpdate: false);
                         break;
                     case 3:
-                        vID = AskID("vehicle");
-                        PrintAll('v', searchID: vID, pause: false);
+                        id = AskID("vehicle");
+                        PrintAll('v', searchID: id, pause: false);
 
                         do
                         {
@@ -108,12 +104,12 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            AskVehicleInfo(isUpdate: true, vIDToUpdate: searchID);
+                            AskVehicleInfo(isUpdate: true, vIDToUpdate: id);
                         }
                         break;
                     case 4:
-                        searchID = AskID("vehicle");
-                        PrintAll('v', searchID: searchID, pause: false);
+                        id = AskID("vehicle");
+                        PrintAll('v', searchID: id, pause: false);
 
                         do
                         {
@@ -124,7 +120,7 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            Delete(dbTable: "vehicle", colname: "vID", searchID);
+                            Delete(dbTable: "vehicle", colname: "id", id);
                         }
                         break;
                     case 5:
@@ -158,7 +154,7 @@ namespace TeuCarRepairMgtSys
             Console.WriteLine("\nSelect a number: ");
             temp = Console.ReadLine().Trim();
 
-            if (IsValidInt(temp) == true)
+            if (IsValid(temp))
             {
                 switch (int.Parse(temp))
                 {
@@ -170,8 +166,8 @@ namespace TeuCarRepairMgtSys
                         AskInvInfo(isUpdate: false);
                         break;
                     case 3:
-                        searchID = AskID("inventory", inInv: true);
-                        PrintAll('i', searchID: searchID, pause: false);
+                        id = AskID("inventory", inInv: true);
+                        PrintAll('i', searchID: id, pause: false);
 
                         do
                         {
@@ -181,12 +177,13 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            AskInvInfo(isUpdate: true, whichID: searchID);
+                            id = GetID(FROM: "inventory", WHERE: "id", id); //vid
+                            AskInvInfo(isUpdate: true, vIDToUpdate: id);
                         }
                         break;
                     case 4:
-                        searchID = AskID("inventory", inInv: true);
-                        PrintAll('i', searchID: searchID, pause: false);
+                        id = AskID("inventory", inInv: true);
+                        PrintAll('i', searchID: id, pause: false);
 
                         do
                         {
@@ -197,7 +194,8 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            Delete(dbTable: "inventory", colname: "vID", searchID);
+                            id = GetID(FROM: "inventory", WHERE: "vID", id);
+                            Delete(dbTable: "inventory", colname: "vID", id);
                         }
                         break;
                     case 5:
@@ -233,7 +231,7 @@ namespace TeuCarRepairMgtSys
             Console.WriteLine("\nSelect a number: ");
             temp = Console.ReadLine().Trim();
 
-            if (IsValidInt(temp) == true)
+            if (IsValid(temp))
             {
                 switch (int.Parse(temp))
                 {
@@ -245,8 +243,8 @@ namespace TeuCarRepairMgtSys
                         AskRepInfo(isUpdate: false);
                         break;
                     case 3:
-                        searchID = AskID("repair");
-                        PrintAll('r', searchID: searchID, pause: false);
+                        id = AskID("repair");
+                        PrintAll('r', searchID: id, pause: false);
 
                         do
                         {
@@ -256,12 +254,12 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            AskRepInfo(isUpdate: true, whichID: searchID);
+                            AskRepInfo(isUpdate: true, whichID: id);
                         }
                         break;
                     case 4:
-                        searchID = AskID("repair", inInv: true);
-                        PrintAll('r', searchID: searchID, pause: false);
+                        id = AskID("repair");
+                        PrintAll('r', searchID: id, pause: false);
 
                         do
                         {
@@ -272,7 +270,7 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            Delete(dbTable: "repair", colname: "rID", searchID);
+                            Delete(dbTable: "repair", colname: "id", id);
                         }
                         break;
                     case 5:
@@ -320,10 +318,14 @@ namespace TeuCarRepairMgtSys
             {
                 Console.WriteLine($"Year(1900 - 2021): ");
                 temp = Console.ReadLine().Trim().ToUpper();
-                if (temp.Length > 0 && IsValidInt(temp))
+                if (temp.Length > 0 && IsValid(temp))
                 {
                     int tempyr = int.Parse(temp);
                     temp = tempyr >= 1900 && tempyr <= 2021 ? temp : "";
+                }
+                else
+                {
+                    temp = "";
                 }
                 Console.WriteLine(temp.Length <= 0 ? $"Error: value must be between 19900 - 2021 only.\n" : null);
             } while (temp.Length <= 0);
@@ -347,12 +349,11 @@ namespace TeuCarRepairMgtSys
 
         /**
          * asks for the inventory infos then insert or update accordingly 
+         * if vid exist, tell user to update record instead
          */
-        public static void AskInvInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
+        public static void AskInvInfo(string eMsg = "", bool isUpdate = false, int vIDToUpdate = -1)
         {
-            int stock;
-            double price;
-            double cost;
+            Inventory newInv = new Inventory();
 
             if (isUpdate == false)
             {
@@ -360,59 +361,54 @@ namespace TeuCarRepairMgtSys
                 {
                     Console.WriteLine("Enter vehicle ID: ");
                     temp = Console.ReadLine().Trim();
-                    searchID = IsValidInt(temp) == true ? int.Parse(temp) : -1;
-                    Console.WriteLine(searchID < 0 ? "Error: Enter a valid number.\n" : null);
-                } while (searchID < 0);
+                    newInv.VID = IsValid(temp) ? int.Parse(temp) : -1;
+                    Console.WriteLine(newInv.VID < 0 ? "Error: Enter an existing vehicle id number.\n" : null);
+                } while (newInv.VID < 0);
 
                 //check if vehicle record exist
                 //if not found, go back so user dont get stuck
-                if (GetID(SELECT: "vID", FROM: "vehicle", WHERE: "vID", searchID) < 0)
+                if (GetID(FROM: "vehicle", WHERE: "id", newInv.VID) < 0)
                 {
                     MenuInventory("noV");
                 }
 
-                //check if vehicle already exit in inventory
-                if (GetID(SELECT: "vID", FROM: "inventory", WHERE: "vID", searchID) >= 0)
+                //check if vehicle already in inventory
+                //if found tell user to go update instead
+                if (GetID(FROM: "inventory", WHERE: "vID", newInv.VID) >= 0)
                 {
                     MenuInventory(eMsg: "idExist");
                 }
+            }
+            else
+            {
+                newInv.VID = vIDToUpdate;
             }
 
             do
             {
                 Console.WriteLine("Enter how many stock: ");
                 temp = Console.ReadLine().Trim();
-
-                stock = IsValidInt(temp) == true ? int.Parse(temp) : -1;
-                Console.WriteLine(stock < 0 ? "Error: Stock must be a positive integer.\n" : "");
-            } while (stock < 0);
+                newInv.Stock = IsValid(temp, type: 'i') ? int.Parse(temp) : -1;
+                Console.WriteLine(newInv.Stock < 0 ? "Error: Enter a positive whole number only.\n" : "");
+            } while (newInv.Stock < 0);
 
             do
             {
                 Console.WriteLine("Enter price: ");
                 temp = Console.ReadLine().Trim();
-
-                price = IsValidDouble(temp) == true ? double.Parse(temp) : -1;
-                Console.WriteLine(price < 0 ? "Error: Price must be a positive whole number or decimal.\n" : "");
-            } while (price < 0);
+                newInv.Price = IsValid(temp, type: 'd') ? double.Parse(temp) : -1;
+                Console.WriteLine(newInv.Price < 0 ? "Error: Enter a positive whole number or decimal only.\n" : "");
+            } while (newInv.Price < 0);
 
             do
             {
                 Console.WriteLine("Enter cost: ");
                 temp = Console.ReadLine().Trim();
-                if (IsValidDouble(temp) == true)
-                {
-                    cost = double.Parse(temp);
-                }
-                else
-                {
-                    cost = -1;
-                    Console.WriteLine(cost < 0 ? "Error: Cost must be a positive whole number or decimal.\n" : "");
-                }
+                newInv.Cost = IsValid(temp, type: 'd') ? double.Parse(temp) : -1;
+                Console.WriteLine(newInv.Cost < 0 ? "Error: Enter a positive whole number or decimal only.\n" : "");
+            } while (newInv.Cost < 0);
 
-            } while (cost < 0);
-
-            //InsertInventory(vID: searchID, stock, price, cost, isUpdate: isUpdate, whichID: whichID);
+            InsertUpdate(tbChar: 'i', iIN: newInv, isUpdate: isUpdate);
         }
 
         /**
@@ -420,65 +416,37 @@ namespace TeuCarRepairMgtSys
          */
         public static void AskRepInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
         {
-            if (isUpdate == false)
-            {
-                do
-                {
-                    Console.WriteLine("Enter inventory ID: ");
-                    temp = Console.ReadLine().Trim();
-                    searchID = IsValidInt(temp) == true ? int.Parse(temp) : -1;
-                    Console.WriteLine(searchID < 0 ? "Error: Enter a valid number.\n" : null);
-                } while (searchID < 0);
+            Repair newR = new Repair();
 
-                //check if inventory record exist
-                //if not found, go back so user dont get stuck
-                if (GetID(SELECT: "iID", FROM: "inventory", WHERE: "iID", searchID) < 0)
-                {
-                    MenuRepair("noI");
-                }
+            do
+            {
+                Console.WriteLine("Enter inventory ID: ");
+                temp = Console.ReadLine().Trim();
+                newR.IID = IsValid(temp) ? int.Parse(temp) : -1;
+                Console.WriteLine(newR.IID < 0 ? "Error: Enter an existing inventory id number.\n" : null);
+            } while (newR.IID < 0);
+
+            //check if inventory record exist
+            //if not found, go back so user dont get stuck
+            if (GetID(FROM: "inventory", WHERE: "id", newR.IID) < 0)
+            {
+                MenuRepair("noI");
             }
+
 
             do
             {
                 Console.WriteLine("Part to be repaired: ");
-                temp = Console.ReadLine().Trim().ToUpper();
+                newR.WhatToRepair = Console.ReadLine().Trim().ToUpper();
                 Console.WriteLine(temp.Length <= 0 ? "Error: Value can't be empty.\n" : "");
-            } while (temp.Length <= 0);
+            } while (newR.WhatToRepair.Length <= 0);
 
 
-            //InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: isUpdate == false ? searchID : whichID);
+            InsertUpdate(tbChar: 'r', rIN: newR, isUpdate: isUpdate);
 
         }
 
 
-
-        private static bool IsValidDouble(string inputValue)
-        {
-            //catch empty
-            if (inputValue.Trim().Length == 0)
-            {
-                return false;
-            }
-
-            int num = 0;
-            int period = 0;
-
-            char[] charArr = inputValue.ToCharArray();
-
-            foreach (var value in charArr)
-            {
-                if (Char.IsNumber(value))
-                {
-                    num++;
-                }
-                else if (value == '.')
-                {
-                    period++;
-                }
-            }
-
-            return num + period == charArr.Length && period <= 1 ? true : false;
-        }
 
         /**
          * deletes record based on id then go back to menu
@@ -510,28 +478,7 @@ namespace TeuCarRepairMgtSys
             }
         }
 
-        /**
-         * insert/updates the repair record
-         */
-        /*
-        static void InsertRepair(string whatToRepair, bool isUpdate = false, int whichID = -1)
-        {
-            string query = isUpdate == false ? "INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
-                                             "UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@whichID ";
 
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("whichID", whichID);
-                cmd.Parameters.AddWithValue("whatToRepair", whatToRepair);
-
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
-
-            MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
-        }
-        */
         /**
          * insert/updates the record in the db table
          */
@@ -542,7 +489,7 @@ namespace TeuCarRepairMgtSys
             if (tbChar == 'v')
             {
                 query = isUpdate == false ? $"INSERT INTO vehicle (vmake, vmodel, vyear, vcondition) VALUES (@make, @model, @year, @cond)" :
-                                            $"UPDATE vehicle SET vmake=@make, vmodel=@model, vyear=@year,vcondition=@cond WHERE vID=@vID";
+                                            $"UPDATE vehicle SET vmake=@make, vmodel=@model, vyear=@year,vcondition=@cond WHERE id=@id";
             }
             else if (tbChar == 'i')
             {
@@ -551,8 +498,8 @@ namespace TeuCarRepairMgtSys
             }
             else if (tbChar == 'r')
             {
-                query = isUpdate == false ? $"INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
-                                           $"UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@rID ";
+                query = isUpdate == false ? $"INSERT INTO Repair(iID, whatToRepair) VALUES (@iID, @whatToRepair)" :
+                                           $"UPDATE Repair SET iID=@iID, whatToRepair=@whatToRepair WHERE id=@id ";
             }
 
             using (SqlConnection conn = new SqlConnection(cs))
@@ -563,7 +510,7 @@ namespace TeuCarRepairMgtSys
                 {
                     if (isUpdate == true)
                     {
-                        cmd.Parameters.AddWithValue("vID", vIN.Id);
+                        cmd.Parameters.AddWithValue("id", vIN.Id);
                     }
                     cmd.Parameters.AddWithValue("make", vIN.Make);
                     cmd.Parameters.AddWithValue("model", vIN.Model);
@@ -579,7 +526,11 @@ namespace TeuCarRepairMgtSys
                 }
                 else if (tbChar == 'r')
                 {
-                    cmd.Parameters.AddWithValue("rID", rIN.Id);
+                    if (isUpdate == true)
+                    {
+                        cmd.Parameters.AddWithValue("id", rIN.Id);
+                    }
+                    cmd.Parameters.AddWithValue("iID", rIN.IID);
                     cmd.Parameters.AddWithValue("whatToRepair", rIN.WhatToRepair);
                 }
 
@@ -601,38 +552,7 @@ namespace TeuCarRepairMgtSys
                 MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
             }
         }
-        
-        /**
-         * insert/updates the inventory record
-         */
-        /*
-        static void InsertInventory(int vID, int stock, double price, double cost, bool isUpdate = false, int whichID = -1)
-        {
-            string query = isUpdate == false ? "INSERT INTO Inventory(vID, stock, price, cost) VALUES (@vID,@stock,@price,@cost)" :
-                                             "UPDATE Inventory SET stock=@stock, price=@price, cost=@cost WHERE vID=@whichID";
 
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                SqlCommand cmd = new SqlCommand(query, conn);
-                if (isUpdate == false)
-                {
-                    cmd.Parameters.AddWithValue("vID", vID);
-                }
-                else
-                {
-                    cmd.Parameters.AddWithValue("whichID", whichID);
-                }
-
-                cmd.Parameters.AddWithValue("stock", stock);
-                cmd.Parameters.AddWithValue("price", price);
-                cmd.Parameters.AddWithValue("cost", cost);
-
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
-            MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
-        }
-        */
         /**
          * asks for the tables id  and
          * checks if it exist in thhe db and
@@ -646,41 +566,47 @@ namespace TeuCarRepairMgtSys
             Console.WriteLine($"Enter {temptb} ID: ");
             temp = Console.ReadLine().Trim();
 
-            if (IsValidInt(temp) == true)
+            if (IsValid(temp))
             {
-                searchID = int.Parse(temp);
+                id = GetID(FROM: tbname, WHERE: tbname.StartsWith('i') ? "vID" : "id", int.Parse(temp));
 
-                if (tbname.StartsWith('v') && GetID(SELECT: "vID", FROM: tbname, WHERE: "vID", searchID) >= 0 ||
-                    tbname.StartsWith('i') && GetID(SELECT: "iID", FROM: tbname, WHERE: "vID", searchID) >= 0 ||
-                    tbname.StartsWith('r') && GetID(SELECT: "rID", FROM: tbname, WHERE: "rID", searchID) >= 0)
+                if (id >= 0)
                 {
-                    return searchID;
+                    return id;
                 }
                 else
                 {
-                    if (tbname.StartsWith('v')) { MenuVehicle(eMsg: "noV"); }
-                    else if (tbname.StartsWith('i')) { MenuInventory(eMsg: "noI"); }
-                    else if (tbname.StartsWith('r')) { MenuRepair(eMsg: "noR"); }
+                    if (tbname.StartsWith('v'))
+                    {
+                        MenuVehicle(eMsg: "noV");
+                    }
+                    else if (tbname.StartsWith('i'))
+                    {
+                        MenuInventory(eMsg: "noI");
+                    }
+                    else if (tbname.StartsWith('r'))
+                    {
+                        MenuRepair(eMsg: "noR");
+                    }
                 }
             }
             else
             {
-                AskID(tbname: tbname, "emInt");
+                AskID(tbname: tbname, "emInt", inInv: inInv);
             }
             return -1;
         }
 
         /**
          * retrieves ID from db
-         * checks if it exist in the db and
          * returns id if it exist, otherwise its -1
          */
-        public static int GetID(string SELECT, string FROM, string WHERE, int searchID)
+        public static int GetID(string FROM, string WHERE, int searchID)
         {
             //storage for all id
             List<int> listID = new List<int>();
 
-            string query = $"SELECT {SELECT} FROM {FROM} WHERE {WHERE}= @searchID";
+            string query = $"SELECT id FROM {FROM} WHERE {WHERE}= @searchID";
 
             using (SqlConnection conn = new SqlConnection(cs))
             {
@@ -712,7 +638,7 @@ namespace TeuCarRepairMgtSys
         }
 
         /**
-         * prints the clossing messaage
+         * prints the closing messaage
          */
         public static void PrintExitMsg()
         {
@@ -797,28 +723,25 @@ namespace TeuCarRepairMgtSys
          * 
          * returns false if value is empty, has a non number 
          */
-        public static bool IsValidInt(string inputValue)
+        public static bool IsValid(string inputValue, char type = 'i')
         {
-
-            if (!string.IsNullOrEmpty(inputValue))
+            try
             {
-                //check each char
-                char[] charArr = inputValue.ToCharArray();
-
-                foreach (var value in charArr)
+                if (type == 'd')
                 {
-                    if (Char.IsNumber(value) == false)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return true;
-                    }
+                    double value = double.Parse(inputValue);
+                }
+                else
+                {
+                    int value = int.Parse(inputValue);
                 }
             }
+            catch
+            {
+                return false;
+            }
 
-            return false;
+            return true;
         }
 
         /**
@@ -855,19 +778,19 @@ namespace TeuCarRepairMgtSys
 
             if (rec == 'v')
             {
-                query = searchID < 0 ? "SELECT vID, vmake, vmodel, vyear, vcondition FROM Vehicle" :
-                                         "SELECT vID, vmake, vmodel, vyear, vcondition FROM Vehicle WHERE vID=@searchID";
+                query = searchID < 0 ? "SELECT id, vmake, vmodel, vyear, vcondition FROM Vehicle" :
+                                         "SELECT id, vmake, vmodel, vyear, vcondition FROM Vehicle WHERE id=@searchID";
             }
             else if (rec == 'i')
             {
-                query = searchID < 0 ? "SELECT iID, vID, stock, price, cost FROM Inventory" :
-                                         "SELECT iID, vID, stock, price, cost FROM Inventory WHERE vID=@searchID";
+                query = searchID < 0 ? "SELECT id, vID, stock, price, cost FROM Inventory" :
+                                         "SELECT id, vID, stock, price, cost FROM Inventory WHERE vID=@searchID";
 
             }
             else if (rec == 'r')
             {
-                query = searchID < 0 ? "SELECT rID, iID, whatToRepair FROM Repair" :
-                                        "SELECT rID, iID, whatToRepair FROM Repair WHERE rID=@searchID";
+                query = searchID < 0 ? "SELECT id, iID, whatToRepair FROM Repair" :
+                                        "SELECT id, iID, whatToRepair FROM Repair WHERE id=@searchID";
             }
 
             SqlCommand cmd = new SqlCommand(query, conn);
