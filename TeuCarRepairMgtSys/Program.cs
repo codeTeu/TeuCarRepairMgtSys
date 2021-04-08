@@ -115,7 +115,7 @@ namespace TeuCarRepairMgtSys
 
                         do
                         {
-                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record is a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
+                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
                             Console.WriteLine("\nDelete this record? (y/n)");
                             temp = Console.ReadLine().ToLower();
                         } while (!temp.Equals("y") && !temp.Equals("n"));
@@ -141,7 +141,7 @@ namespace TeuCarRepairMgtSys
         }
 
         /**
-         *  prints the Vehicle menu options 
+         *  prints the Inventory menu options 
          *  loops if input is wrong or not within range
          */
         public static void MenuInventory(string eMsg = "", int eMin = 0, int eMax = 0)
@@ -188,7 +188,7 @@ namespace TeuCarRepairMgtSys
 
                         do
                         {
-                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record is a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
+                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
                             Console.WriteLine("\nDelete this record? (y/n)");
                             temp = Console.ReadLine().ToLower();
                         } while (!temp.Equals("y") && !temp.Equals("n"));
@@ -216,7 +216,7 @@ namespace TeuCarRepairMgtSys
 
 
         /**
-         *  prints the Vehihcle menu options 
+         *  prints the Repair menu options 
          *  loops if input is wrong or not within range
          */
         public static void MenuRepair(string eMsg = "", int eMin = 0, int eMax = 0)
@@ -288,7 +288,9 @@ namespace TeuCarRepairMgtSys
             MenuRepair();
         }
 
-
+        /**
+         * asks for the vehicle infos then insert or update accordingly 
+         */
         public static void AskVehicleInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
         {
             list.Clear(); //reset
@@ -310,8 +312,8 @@ namespace TeuCarRepairMgtSys
 
                     else if (i == 3)
                     {
-                        temp = temp.Equals("Y") ? "new" :
-                                temp.Equals("N") ? "used" : "";
+                        temp = temp.Equals("Y") ? "NEW" :
+                                temp.Equals("N") ? "USED" : "";
                     }
 
                     if (temp.Length <= 0)
@@ -329,7 +331,9 @@ namespace TeuCarRepairMgtSys
             InsertVehicle(list[0], list[1], int.Parse(list[2]), list[3], isUpdate: isUpdate, whichID: whichID);
         }
 
-
+        /**
+         * asks for the inventory infos then insert or update accordingly 
+         */
         public static void AskInvInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
         {
             int stock;
@@ -397,6 +401,9 @@ namespace TeuCarRepairMgtSys
             InsertInventory(vID: searchID, stock, price, cost, isUpdate: isUpdate, whichID: whichID);
         }
 
+        /**
+         * asks for the repair infos then insert or update accordingly 
+         */
         public static void AskRepInfo(string eMsg = "", bool isUpdate = false, int whichID = -1)
         {
             if (isUpdate == false)
@@ -425,10 +432,10 @@ namespace TeuCarRepairMgtSys
             } while (temp.Length <= 0);
 
 
-            InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: whichID);
-
+            InsertRepair(whatToRepair: temp, isUpdate: isUpdate, whichID: isUpdate == false ? searchID : whichID);
 
         }
+
 
 
         private static bool IsValidDouble(string inputValue)
@@ -459,6 +466,9 @@ namespace TeuCarRepairMgtSys
             return num + period == charArr.Length && period <= 1 ? true : false;
         }
 
+        /**
+         * deletes record based on id then go back to menu
+         */
         public static void Delete(string dbTable, string colname, int searchID, string eMsg = "")
         {
             string query = $"DELETE FROM {dbTable} WHERE {colname}=@searchID";
@@ -484,12 +494,15 @@ namespace TeuCarRepairMgtSys
             {
                 MenuRepair(eMsg: "dSucc");
             }
-
         }
+
+        /**
+         * insert/updates the repair record
+         */
         static void InsertRepair(string whatToRepair, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Repair(iID, whatToRepair) VALUES (@whichID, @whatToRepair)" :
-                                             "UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@whichID";
+                                             "UPDATE Repair SET whatToRepair=@whatToRepair WHERE rID=@whichID ";
 
             using (SqlConnection conn = new SqlConnection(cs))
             {
@@ -504,6 +517,9 @@ namespace TeuCarRepairMgtSys
             MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
 
+        /**
+         * insert/updates the vehicle record
+         */
         static void InsertVehicle(string make, string model, int year, string cond, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Vehicle(vmake, vmodel, vyear, vcondition) VALUES (@make,@model,@year,@cond)" :
@@ -527,6 +543,9 @@ namespace TeuCarRepairMgtSys
             MenuVehicle(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
 
+        /**
+         * insert/updates the inventory record
+         */
         static void InsertInventory(int vID, int stock, double price, double cost, bool isUpdate = false, int whichID = -1)
         {
             string query = isUpdate == false ? "INSERT INTO Inventory(vID, stock, price, cost) VALUES (@vID,@stock,@price,@cost)" :
@@ -554,12 +573,17 @@ namespace TeuCarRepairMgtSys
             MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
         }
 
+        /**
+         * asks for the tables id  and
+         * chhecks if it exist in thhe db and
+         * returns id if it exist, otherwise its -1
+         */
         public static int AskID(string tbname, string eMsg = "", bool inInv = false)
         {
-            tbname = tbname.StartsWith('i') && inInv == true ? "vehicle" : tbname;
+            string temptb = tbname.StartsWith('i') && inInv == true ? "vehicle" : tbname;
 
             PrintSubMenuHeader("Which record?", eMsg: eMsg);
-            Console.WriteLine($"Enter {tbname} ID: ");
+            Console.WriteLine($"Enter {temptb} ID: ");
             temp = Console.ReadLine().Trim();
 
             if (IsValidInt(temp) == true)
@@ -586,6 +610,11 @@ namespace TeuCarRepairMgtSys
             return -1;
         }
 
+        /**
+         * retrieves ID from db
+         * checks if it exist in the db and
+         * returns id if it exist, otherwise its -1
+         */
         public static int GetID(string SELECT, string FROM, string WHERE, int searchID)
         {
             //storage for all id
@@ -792,7 +821,7 @@ namespace TeuCarRepairMgtSys
             if (rec == 'v')
             {
                 Console.WriteLine($"   {"ID",-5} {"MAKE",-10} {"MODEL",-10} {"YEAR",-10} { "CONDITION",-10}");
-
+                Console.WriteLine("----------------------------------------------------------");
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
@@ -807,7 +836,7 @@ namespace TeuCarRepairMgtSys
             else if (rec == 'i')
             {
                 Console.WriteLine($"   {"ID",-5} {"VID",-10} {"STOCK",-10} {"PRICE",-10} { "COST",-10}");
-
+                Console.WriteLine("----------------------------------------------------------");
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
@@ -816,13 +845,13 @@ namespace TeuCarRepairMgtSys
                     double price = reader.GetDouble(3);
                     double cost = reader.GetDouble(4);
 
-                    Console.WriteLine($"   {id,-5} {vid,-10} {stock,-10} {price,-10} {cost,-10}");
+                    Console.WriteLine($"   {id,-5}  {vid,-10} {stock,-10}$ {price,-10}$ {cost,-10}");
                 }
             }
             else if (rec == 'r')
             {
                 Console.WriteLine($"   {"ID",-5} {"Inventory ID",-20} {"WHAT TO REPAIR",-20} ");
-
+                Console.WriteLine("----------------------------------------------------------");
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
@@ -839,8 +868,6 @@ namespace TeuCarRepairMgtSys
                 Console.ReadKey();
             }
         }
-
-
 
 
     }

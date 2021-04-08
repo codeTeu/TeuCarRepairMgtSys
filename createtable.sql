@@ -28,11 +28,11 @@ CONSTRAINT "FK_Inventory_Inventory" FOREIGN KEY ("iID") REFERENCES "dbo"."Invent
 );
 
 
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('FORD', 'ESCAPE', 2000, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CIVIC', 2021, 'new');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('NISSAN', 'ARMAAD', 1995, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CR-V', 1993, 'used');
-INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('TOYOTA', 'CAMMMRY', 2012, 'new');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('FORD', 'ESCAPE', 2000, 'USED');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CIVIC', 2021, 'NEW');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('NISSAN', 'ARMAAD', 1995, 'USED');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('HONDA', 'CR-V', 1993, 'USED');
+INSERT INTO vehicle(vmake,vmodel,vyear,vcondition) VALUES('TOYOTA', 'CAMMRY', 2012, 'NEW');
 
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(1, 1, 1, 1);
 INSERT INTO Inventory(vID,stock,price,cost) VALUES(2, 2, 2, 2);
