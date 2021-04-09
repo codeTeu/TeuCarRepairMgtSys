@@ -14,6 +14,7 @@ namespace TeuCarRepairMgtSys
         private static string temp = "";
         private static string errorMsg = "";
         private static int id = -1;
+
         static void Main(string[] args)
         {
             MenuMain();
@@ -40,13 +41,13 @@ namespace TeuCarRepairMgtSys
                 switch (int.Parse(temp))
                 {
                     case 1:
-                        MenuVehicle();
+                        Menu("vehicle");
                         break;
                     case 2:
-                        MenuInventory();
+                        Menu("inventory");
                         break;
                     case 3:
-                        MenuRepair();
+                        Menu("repair");
                         break;
                     case 4:
                         PrintExitMsg();
@@ -65,15 +66,15 @@ namespace TeuCarRepairMgtSys
         }
 
 
-        /**
-         *  prints the Vehicle menu options 
-         *  loops if input is wrong or not within range
-         */
-        public static void MenuVehicle(string eMsg = "", int eMin = 0, int eMax = 0)
-        {
-            PrintSubMenuHeader("VEHICLE MENU", eMsg: eMsg, eMin: 1, eMax: 5);
 
-            Console.WriteLine("[1] List all vehicles");
+
+        public static void Menu(string menuName, string eMsg = "")
+        {
+            char menuChar = menuName.ToCharArray()[0];
+
+            PrintSubMenuHeader($"{menuName.ToUpper()} MENU", eMsg: eMsg, eMin: 1, eMax: 5);
+
+            Console.WriteLine($"[1] View all {menuName}");
             Console.WriteLine("[2] Add new");
             Console.WriteLine("[3] Update");
             Console.WriteLine("[4] Delete");
@@ -86,15 +87,26 @@ namespace TeuCarRepairMgtSys
                 switch (int.Parse(temp))
                 {
                     case 1:
-                        PrintAll('v');
+                        PrintAll(menuName.ToCharArray()[0]);
                         break;
                     case 2:
-                        PrintSubMenuHeader("ADD NEW VEHICLE");
-                        AskVehicleInfo(isUpdate: false);
+                        PrintSubMenuHeader($"ADD NEW {menuName}");
+                        if (menuName.StartsWith('v'))
+                        {
+                            AskVehicleInfo(isUpdate: false);
+                        }
+                        else if (menuName.StartsWith('i'))
+                        {
+                            AskInvInfo(isUpdate: false);
+                        }
+                        else
+                        {
+                            AskRepInfo(isUpdate: false);
+                        }
                         break;
                     case 3:
-                        id = AskID("vehicle");
-                        PrintAll('v', searchID: id, pause: false);
+                        id = AskID(menuName, inInv: menuChar == 'i' ? true : false);
+                        PrintAll(rec: menuChar, searchID: id, pause: false);
 
                         do
                         {
@@ -104,189 +116,59 @@ namespace TeuCarRepairMgtSys
 
                         if (temp.Equals("y"))
                         {
-                            AskVehicleInfo(isUpdate: true, vIDToUpdate: id);
+                            if (menuChar == 'v')
+                            {
+                                AskVehicleInfo(isUpdate: true, vIDToUpdate: id);
+                            }
+                            else if (menuChar == 'i')
+                            {
+                                id = GetID(FROM: menuName, WHERE: "id", id); //vid
+                                AskInvInfo(isUpdate: true, vIDToUpdate: id);
+                            }
+                            else
+                            {
+                                AskRepInfo(isUpdate: true, whichID: id);
+                            }
+
                         }
                         break;
                     case 4:
-                        id = AskID("vehicle");
-                        PrintAll('v', searchID: id, pause: false);
-
-                        do
-                        {
-                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
-                            Console.WriteLine("\nDelete this record? (y/n)");
-                            temp = Console.ReadLine().ToLower();
-                        } while (!temp.Equals("y") && !temp.Equals("n"));
-
-                        if (temp.Equals("y"))
-                        {
-                            Delete(dbTable: "vehicle", colname: "id", id);
-                        }
+                        id = AskID(menuName, inInv: menuChar == 'i' ? true : false);
+                        PrintAll(menuChar, searchID: id, pause: false);
+                        AskDelete(dbTable: menuName, colname: menuChar == 'i' ? "vID" : "id", id);
                         break;
                     case 5:
                         MenuMain();
                         break;
                     default:
-                        MenuVehicle(eMsg: "emRange"); //input not in range
+                        Menu(menuName, eMsg: "emRange"); //input not in range
                         break;
                 }
             }
             else
             {
-                MenuVehicle(eMsg: "emInt");
+                Menu(menuName, eMsg: "emInt");
             }
-            MenuVehicle();
+            Menu(menuName);
         }
 
-        /**
-         *  prints the Inventory menu options 
-         *  loops if input is wrong or not within range
-         */
-        public static void MenuInventory(string eMsg = "", int eMin = 0, int eMax = 0)
+
+        public static void AskDelete(string dbTable = "", string colname = "", int id = -1)
         {
-            PrintSubMenuHeader("INVENTORY MENU", eMsg: eMsg, eMin: 1, eMax: 5);
-
-            Console.WriteLine("[1] View all inventory");
-            Console.WriteLine("[2] Add new");
-            Console.WriteLine("[3] Update");
-            Console.WriteLine("[4] Delete");
-            Console.WriteLine("[5] Return to main");
-            Console.WriteLine("\nSelect a number: ");
-            temp = Console.ReadLine().Trim();
-
-            if (IsValid(temp))
+            do
             {
-                switch (int.Parse(temp))
-                {
-                    case 1:
-                        PrintAll('i');
-                        break;
-                    case 2:
-                        PrintSubMenuHeader("ADD NEW INVENTORY");
-                        AskInvInfo(isUpdate: false);
-                        break;
-                    case 3:
-                        id = AskID("inventory", inInv: true);
-                        PrintAll('i', searchID: id, pause: false);
+                Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
+                Console.WriteLine("\nDelete this record? (y/n)");
+                temp = Console.ReadLine().ToLower();
+            } while (!temp.Equals("y") && !temp.Equals("n"));
 
-                        do
-                        {
-                            Console.WriteLine("\nUpdate this record? (y/n)");
-                            temp = Console.ReadLine().ToLower();
-                        } while (!temp.Equals("y") && !temp.Equals("n"));
-
-                        if (temp.Equals("y"))
-                        {
-                            id = GetID(FROM: "inventory", WHERE: "id", id); //vid
-                            AskInvInfo(isUpdate: true, vIDToUpdate: id);
-                        }
-                        break;
-                    case 4:
-                        id = AskID("inventory", inInv: true);
-                        PrintAll('i', searchID: id, pause: false);
-
-                        do
-                        {
-                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
-                            Console.WriteLine("\nDelete this record? (y/n)");
-                            temp = Console.ReadLine().ToLower();
-                        } while (!temp.Equals("y") && !temp.Equals("n"));
-
-                        if (temp.Equals("y"))
-                        {
-                            id = GetID(FROM: "inventory", WHERE: "vID", id);
-                            Delete(dbTable: "inventory", colname: "vID", id);
-                        }
-                        break;
-                    case 5:
-                        MenuMain();
-                        break;
-                    default:
-                        MenuInventory(eMsg: "emRange"); //input not in range
-                        break;
-                }
-            }
-            else
+            if (temp.Equals("y"))
             {
-                MenuInventory(eMsg: "emInt");
+                id = dbTable.StartsWith('i') ? GetID(FROM: "inventory", WHERE: "vID", id) : id;
+                Delete(dbTable: dbTable, colname: colname, searchID: id);
             }
-            MenuInventory();
         }
 
-
-
-        /**
-         *  prints the Repair menu options 
-         *  loops if input is wrong or not within range
-         */
-        public static void MenuRepair(string eMsg = "", int eMin = 0, int eMax = 0)
-        {
-            PrintSubMenuHeader("REPAIR MENU", eMsg: eMsg, eMin: 1, eMax: 5);
-
-            Console.WriteLine("[1] View all");
-            Console.WriteLine("[2] Add new");
-            Console.WriteLine("[3] Update");
-            Console.WriteLine("[4] Delete");
-            Console.WriteLine("[5] Return to main");
-            Console.WriteLine("\nSelect a number: ");
-            temp = Console.ReadLine().Trim();
-
-            if (IsValid(temp))
-            {
-                switch (int.Parse(temp))
-                {
-                    case 1:
-                        PrintAll('r');
-                        break;
-                    case 2:
-                        PrintSubMenuHeader("ADD NEW REPAIR");
-                        AskRepInfo(isUpdate: false);
-                        break;
-                    case 3:
-                        id = AskID("repair");
-                        PrintAll('r', searchID: id, pause: false);
-
-                        do
-                        {
-                            Console.WriteLine("\nUpdate this record? (y/n)");
-                            temp = Console.ReadLine().ToLower();
-                        } while (!temp.Equals("y") && !temp.Equals("n"));
-
-                        if (temp.Equals("y"))
-                        {
-                            AskRepInfo(isUpdate: true, whichID: id);
-                        }
-                        break;
-                    case 4:
-                        id = AskID("repair");
-                        PrintAll('r', searchID: id, pause: false);
-
-                        do
-                        {
-                            Console.WriteLine("\n--------WARNING---------\nThe primary key of this record may be a foreign key in other database tables. \nIf you continue, data on those tables will also be deleted.");
-                            Console.WriteLine("\nDelete this record? (y/n)");
-                            temp = Console.ReadLine().ToLower();
-                        } while (!temp.Equals("y") && !temp.Equals("n"));
-
-                        if (temp.Equals("y"))
-                        {
-                            Delete(dbTable: "repair", colname: "id", id);
-                        }
-                        break;
-                    case 5:
-                        MenuMain();
-                        break;
-                    default:
-                        MenuRepair(eMsg: "emRange"); //input not in range
-                        break;
-                }
-            }
-            else
-            {
-                MenuRepair(eMsg: "emInt");
-            }
-            MenuRepair();
-        }
 
         /**
          * asks for the vehicle infos then insert or update accordingly 
@@ -369,14 +251,14 @@ namespace TeuCarRepairMgtSys
                 //if not found, go back so user dont get stuck
                 if (GetID(FROM: "vehicle", WHERE: "id", newInv.VID) < 0)
                 {
-                    MenuInventory("noV");
+                    Menu("inventory", "noV");
                 }
 
                 //check if vehicle already in inventory
                 //if found tell user to go update instead
                 if (GetID(FROM: "inventory", WHERE: "vID", newInv.VID) >= 0)
                 {
-                    MenuInventory(eMsg: "idExist");
+                    Menu("inventory", eMsg: "idExist");
                 }
             }
             else
@@ -430,9 +312,8 @@ namespace TeuCarRepairMgtSys
             //if not found, go back so user dont get stuck
             if (GetID(FROM: "inventory", WHERE: "id", newR.IID) < 0)
             {
-                MenuRepair("noI");
+                Menu("repair", "noI");
             }
-
 
             do
             {
@@ -466,15 +347,15 @@ namespace TeuCarRepairMgtSys
 
             if (dbTable.StartsWith('v'))
             {
-                MenuVehicle(eMsg: "dSucc");
+                Menu("vehicle", eMsg: "dSucc");
             }
             else if (dbTable.StartsWith('i'))
             {
-                MenuInventory(eMsg: "dSucc");
+                Menu("inventory", eMsg: "dSucc");
             }
             else
             {
-                MenuRepair(eMsg: "dSucc");
+                Menu("repair", eMsg: "dSucc");
             }
         }
 
@@ -541,15 +422,15 @@ namespace TeuCarRepairMgtSys
 
             if (tbChar == 'v')
             {
-                MenuVehicle(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+                Menu("vehicle", eMsg: isUpdate == false ? "aSucc" : "uSucc");
             }
             else if (tbChar == 'i')
             {
-                MenuInventory(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+                Menu("inventory", eMsg: isUpdate == false ? "aSucc" : "uSucc");
             }
             else if (tbChar == 'r')
             {
-                MenuRepair(eMsg: isUpdate == false ? "aSucc" : "uSucc");
+                Menu("repair", eMsg: isUpdate == false ? "aSucc" : "uSucc");
             }
         }
 
@@ -578,15 +459,15 @@ namespace TeuCarRepairMgtSys
                 {
                     if (tbname.StartsWith('v'))
                     {
-                        MenuVehicle(eMsg: "noV");
+                        Menu("vehicle", eMsg: "noV");
                     }
                     else if (tbname.StartsWith('i'))
                     {
-                        MenuInventory(eMsg: "noI");
+                        Menu("inventory", eMsg: "noI");
                     }
                     else if (tbname.StartsWith('r'))
                     {
-                        MenuRepair(eMsg: "noR");
+                        Menu("repair", eMsg: "noR");
                     }
                 }
             }
@@ -719,9 +600,7 @@ namespace TeuCarRepairMgtSys
 
 
         /**
-         * checks value if its a number
-         * 
-         * returns false if value is empty, has a non number 
+         * checks value if its a valid int or double
          */
         public static bool IsValid(string inputValue, char type = 'i')
         {
@@ -745,7 +624,7 @@ namespace TeuCarRepairMgtSys
         }
 
         /**
-         * rertrieves conncetion string from json file
+         * retrieves connetion string from json file
          */
         static string GetConnectionString(string connectionStringName)
         {
