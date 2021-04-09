@@ -90,17 +90,24 @@ namespace TeuCarRepairMgtSys
                         PrintAll(menuName.ToCharArray()[0]);
                         break;
                     case 2:
-                        PrintSubMenuHeader($"ADD NEW {menuName}");
+
                         if (menuName.StartsWith('v'))
                         {
+                            PrintSubMenuHeader($"ADD NEW {menuName.ToUpper()}");
                             AskVehicleInfo(isUpdate: false);
                         }
                         else if (menuName.StartsWith('i'))
                         {
+                            PrintAll(rec: 'v', pause: false);
+                            Console.WriteLine($"\n---------------------- ADD NEW {menuName.ToUpper()} ----------------------\n");
+
                             AskInvInfo(isUpdate: false);
                         }
                         else
                         {
+                            PrintAll(rec: 'i', pause: false);
+                            Console.WriteLine($"\n---------------------- ADD NEW {menuName.ToUpper()} ----------------------\n");
+
                             AskRepInfo(isUpdate: false);
                         }
                         break;
@@ -443,7 +450,7 @@ namespace TeuCarRepairMgtSys
         {
             string temptb = tbname.StartsWith('i') && inInv == true ? "vehicle" : tbname;
 
-            PrintSubMenuHeader("Which record?", eMsg: eMsg);
+            PrintSubMenuHeader($"RETRIEVE {tbname.ToUpper()} RECORD", eMsg: eMsg);
             Console.WriteLine($"Enter {temptb} ID: ");
             temp = Console.ReadLine().Trim();
 
@@ -643,9 +650,9 @@ namespace TeuCarRepairMgtSys
             //assign title
             string title = "";
 
-            if (rec == 'v') { title = searchID < 0 ? "VEHICLE LIST" : "RETRIEVED RECORD"; }
-            else if (rec == 'i') { title = searchID < 0 ? "INVENTORY LIST" : "RETRIEVED RECORD"; }
-            else if (rec == 'r') { title = searchID < 0 ? "REPAIR LIST" : "RETRIEVED RECORD"; }
+            if (rec == 'v') { title = searchID < 0 ? "VEHICLE LIST" : "RETRIEVED VEHICLE RECORD"; }
+            else if (rec == 'i') { title = searchID < 0 ? "INVENTORY LIST" : "RETRIEVED INVENTORY RECORD"; }
+            else if (rec == 'r') { title = searchID < 0 ? "REPAIR LIST" : "RETRIEVED REPAIR RECORD"; }
 
             //print title
             PrintSubMenuHeader(title);
